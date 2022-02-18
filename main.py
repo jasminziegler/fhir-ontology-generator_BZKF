@@ -46,7 +46,8 @@ def generate_snapshots():
     data_set_folders = [f.path for f in os.scandir("resources/core_data_sets") if f.is_dir()]
     saved_path = os.getcwd()
     for folder in data_set_folders:
-        os.chdir(f"{folder}\\package")
+        os.chdir(f"{folder}/package")
+        #os.chdir(f"{folder}\\package")
         os.system(f"fhir install hl7.fhir.r4.core")
         for file in [f for f in os.listdir('.') if
                      os.path.isfile(f) and is_structured_definition(f) and "-snapshot" not in f]:
@@ -131,8 +132,11 @@ def generate_core_data_set():
             module_code = TermCode("mii.abide", module_name, module_name)
             module_category_entry = TerminologyEntry([module_code], "Category", selectable=False, leaf=False)
             data_set = data_set.replace(" ", "#")
-            for snapshot in [f"resources\\core_data_sets\\{data_set}\\package\\{f.name}" for f in
-                             os.scandir(f"resources/core_data_sets\\{data_set}\\package") if
+            # for snapshot in [f"resources\\core_data_sets\\{data_set}\\package\\{f.name}" for f in
+            #                  os.scandir(f"resources/core_data_sets\\{data_set}\\package") if
+            #                  not f.is_dir() and "-snapshot" in f.name]:
+            for snapshot in [f"resources/core_data_sets/{data_set}/package/{f.name}" for f in
+                             os.scandir(f"resources/core_data_sets/{data_set}/package") if
                              not f.is_dir() and "-snapshot" in f.name]:
                 with open(snapshot, encoding="UTF-8") as json_file:
                     json_data = json.load(json_file)
@@ -150,8 +154,10 @@ def generate_core_data_set():
                     module_element_code = TermCode("mii.abide", module_element_name, module_element_name)
                     module_element_entry = TerminologyEntry([module_element_code], "Category", selectable=False,
                                                             leaf=False)
+                    # resolve_terminology_entry_profile(module_element_entry,
+                    #                                   data_set=f"resources\\core_data_sets\\{data_set}\\package")
                     resolve_terminology_entry_profile(module_element_entry,
-                                                      data_set=f"resources\\core_data_sets\\{data_set}\\package")
+                                    data_set=f"resources/core_data_sets/{data_set}/package")
                     if module_category_entry.display == module_element_entry.display:
                         # Resolves issue like : -- Prozedure                 --Prozedure
                         #                           -- Prozedure     --->      -- BILDGEBENDE DIAGNOSTIK
@@ -168,20 +174,38 @@ def generate_core_data_set():
 
 
 if __name__ == '__main__':
-    generate_result_folder()
+    
+    # SCHRITT 0 - download dktk stuff here instead of mii core dataset
+
+    #generate_result_folder()
     # ----Time consuming: Only execute initially or on changes----
-    # download_core_data_set_mii()
-    # generate_snapshots()
+    #download_core_data_set_mii()
+
+    # einzeln laufen lassen 
+   
+    # SCHRITT 1
+    #generate_snapshots() #auskommentiert, weil es sehr lange dauert
     # -------------------------------------------------------------
-    core_data_category_entries = generate_core_data_set()
-    category_entries = create_terminology_definition_for(get_gecco_categories())
-    # TODO: ones the specimen and consent profiles are declared use them instead!
-    category_entries.append(get_specimen())
-    category_entries.append(get_consent())
-    generate_ui_profiles(category_entries)
-    for profile in get_ui_profiles():
-        print(profile.to_json())
-    category_entries += core_data_category_entries
-    generate_term_code_mapping(category_entries)
-    generate_term_code_tree(category_entries)
+    
+    # SCHRITT 2
+    #core_data_category_entries = generate_core_data_set()
+
+    # category_entries = create_terminology_definition_for(get_gecco_categories())
+    # # TODO: ones the specimen and consent profiles are declared use them instead!
+    # category_entries.append(get_specimen())
+    # category_entries.append(get_consent())
+    # generate_ui_profiles(category_entries)
+
+    # SCHRITT 3, 4, 5
+    #for profile in get_ui_profiles():
+    #    print(profile.to_json())
+    #category_entries += core_data_category_entries
+    #generate_term_code_mapping(core_data_category_entries)
+    #generate_term_code_tree(core_data_category_entries)
+
+    # remove this category_entries variable to only work with core data without gecco
+    # category_entries += core_data_category_entries
+    # generate_term_code_mapping(category_entries)
+    # generate_term_code_tree(category_entries)
+
     # to_csv(category_entries)

@@ -8,7 +8,7 @@ from sortedcontainers import SortedSet
 from model.UiDataModel import TermCode, TerminologyEntry
 
 ONTOSERVER = os.environ.get('ONTOLOGY_SERVER_ADDRESS')
-locale.setlocale(locale.LC_ALL, 'de_DE')
+#locale.setlocale(locale.LC_ALL, 'de_DE')
 
 
 def expand_value_set(url):
