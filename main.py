@@ -23,7 +23,7 @@ def mkdir_if_not_exists(directory):
             if e.errno != errno.EEXIST:
                 raise
 
-
+# die muss geändert werden
 def download_core_data_set_mii():
     def add_observation_lab_from_mii_to_gecco():
         os.system(f"fhir install {MII_LAB} --here")
@@ -174,17 +174,19 @@ def generate_core_data_set():
 
 
 if __name__ == '__main__':
-    
-    # SCHRITT 0 - download dktk stuff here instead of mii core dataset
-
-    #generate_result_folder()
-    # ----Time consuming: Only execute initially or on changes----
-    #download_core_data_set_mii()
-
     # einzeln laufen lassen 
+
+    # SCHRITT 0 - done
+    #generate_result_folder()
+
+
+    # ----Time consuming: Only execute initially or on changes----
+    #- download dktk stuff here instead of mii core dataset
+    #download_core_data_set_mii()    #rename this later
+
    
     # SCHRITT 1
-    #generate_snapshots() #auskommentiert, weil es sehr lange dauert
+    generate_snapshots() #auskommentiert, weil es sehr lange dauert
     # -------------------------------------------------------------
     
     # SCHRITT 2

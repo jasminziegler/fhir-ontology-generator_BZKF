@@ -8,7 +8,8 @@ MII_PERSON = "de.medizininformatikinitiative.kerndatensatz.person 2.0.0-alpha2"
 MII_PROCEDURE = "de.medizininformatikinitiative.kerndatensatz.prozedur 2.0.0-alpha1"
 MII_SPECIMEN = "de.medizininformatikinitiative.kerndatensatz.biobank 0.9.0"
 BBMRI = "bbmri.de"
-core_data_sets = [MII_DIAGNOSE, MII_LAB, MII_MEDICATION, MII_PERSON, MII_PROCEDURE, MII_SPECIMEN] #, GECCO]
+DKTK = "de.dktk.oncology 1.1.1"
+core_data_sets = [MII_DIAGNOSE, MII_LAB, MII_MEDICATION, MII_PERSON, MII_PROCEDURE, MII_SPECIMEN, DKTK] #, GECCO]
 
 GECCO_DATA_SET = "resources/core_data_sets/de.gecco#1.0.5/package"
 MII_MEDICATION_DATA_SET = "resources/core_data_sets/de.medizininformatikinitiative.kerndatensatz.medikation#1.0.10" \
