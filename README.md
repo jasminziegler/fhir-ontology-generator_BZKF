@@ -1,3 +1,5 @@
+# WIP
+This is work in progress. Forked version.
 # CODEX - Gecco to UI and Mapper
 
 ## Requirements
@@ -11,6 +13,3 @@ Access to a terminology server with all value sets defined in the gecco dataset
 | Var | Description | Example |
 |--------|-------------|---------|
 |ONTOLOGY_SERVER_ADDRESS | Address of the Ontology server fhir api| my_onto_server.com/fhir
-
-## WIP
-This is work in progress. Forked version.
