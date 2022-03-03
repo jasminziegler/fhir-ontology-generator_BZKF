@@ -116,24 +116,27 @@ def get_term_codes(element):
 
 
 def resolve_terminology_entry_profile(terminology_entry, element=None, data_set=GECCO_DATA_SET):
+    # vll brauch ich das gar nicht
     name = LOGICAL_MODEL_TO_PROFILE.get(to_upper_camel_case(terminology_entry.display)) \
         if to_upper_camel_case(terminology_entry.display) in LOGICAL_MODEL_TO_PROFILE else to_upper_camel_case(
         terminology_entry.display)
-    for filename in os.listdir("%s" % data_set):
-        if name in filename and "snapshot" in filename:
-            with open(data_set + "/" + filename, encoding="UTF-8") as profile_file:
-                profile_data = json.load(profile_file)
-                if profile_data["kind"] == "logical":
-                    continue
-                # We differentiate between corner and none corner cases only for readability.
-                if profile_data["name"] in corner_cases:
-                    corner_cases.get(profile_data["name"])(profile_data, terminology_entry, element)
-                elif profile_data["type"] in profile_translation_mapping:
-                    profile_translation_mapping.get(profile_data["type"])(profile_data, terminology_entry, element)
-                else:
-                    raise UnknownHandlingException(profile_data["type"])
-    if element:
-        terminology_entry.display = get_german_display(element) if get_german_display(element) else element["short"]
+    print("from function: " + __name__ , "name = ", name)
+    #step by step - take in more lines bit by bit
+    # for filename in os.listdir("%s" % data_set):
+    #     if name in filename and "snapshot" in filename:
+    #         with open(data_set + "/" + filename, encoding="UTF-8") as profile_file:
+    #             profile_data = json.load(profile_file)
+    #             if profile_data["kind"] == "logical":
+    #                 continue
+    #             # We differentiate between corner and none corner cases only for readability.
+    #             if profile_data["name"] in corner_cases:
+    #                 corner_cases.get(profile_data["name"])(profile_data, terminology_entry, element)
+    #             elif profile_data["type"] in profile_translation_mapping:
+    #                 profile_translation_mapping.get(profile_data["type"])(profile_data, terminology_entry, element)
+    #             else:
+    #                 raise UnknownHandlingException(profile_data["type"])
+    # if element:
+    #     terminology_entry.display = get_german_display(element) if get_german_display(element) else element["short"]
 
 
 def get_german_display(element):
