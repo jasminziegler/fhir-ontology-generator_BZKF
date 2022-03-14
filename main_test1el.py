@@ -17,18 +17,18 @@ def generate_core_data_set():
     print("core_data_sets: ", core_data_sets)
     for data_set in core_data_sets:
         print("data_set: ", data_set)
-        module_name = data_set.split(' ')[0].split(".")[-1].capitalize()    # TODO: check if this does the right thing
+        module_name = data_set.split(' ')[0].split(".")[-1].capitalize()
         print("module_name extracted from filename: ", module_name)
-        module_code = TermCode("abide.dktk.bzkf", module_name, module_name)
-        module_category_entry = TerminologyEntry([module_code], "Category", selectable=False, leaf=False)
+        module_code = TermCode("mii.abide", module_name, module_name)       # System?? was anderes? was wird daduch beeinfluss
+        module_category_entry = TerminologyEntry([module_code], "Category", selectable=False,  leaf=False)
         data_set = data_set.replace(" ", "#")
+        print("data_set = ", data_set)
         #test all available elements in dktk folder
         for snapshot in [f"resources/core_data_sets/{data_set}/package/{f.name}" for f in
-                    os.scandir(f"resources/core_data_sets/{data_set}/package") if
+                    os.scandir(f"resources/core_data_sets/{data_set}/package/") if
                     not f.is_dir() and "-snapshot" in f.name]:
             with open(snapshot, encoding="UTF-8") as json_file:
                 json_data = json.load(json_file)
-                #print("Json url: %s", json_data.get("url"))
                 if (kind := json_data.get("kind")) and (kind == "logical"):
                         print("kind == logical, Json url: %s", json_data.get("url"))
                         continue
@@ -54,3 +54,22 @@ def generate_core_data_set():
 
 
 generate_core_data_set()
+
+def do_nothing(_profile_data, _terminology_entry, _element):
+    pass
+
+def print_cornercase(_profile_data, _terminology_entry, _element):
+    print("corner_case")
+
+#maybe I have different corner cases or none at all
+corner_cases = {
+    "Age": print_cornercase, #translate_age,
+    "BloodPressure": print_cornercase, #translate_blood_pressure,
+    "DependenceOnVentilator": print_cornercase, #translate_dependency_on_ventilator,
+    "DoNotResuscitateOrder": print_cornercase, #translate_resuscitation,
+    "EthnicGroup": print_cornercase #translate_ethnic_group,
+}
+
+non_corner_cases = {
+    
+}

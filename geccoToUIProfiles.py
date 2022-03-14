@@ -122,21 +122,23 @@ def resolve_terminology_entry_profile(terminology_entry, element=None, data_set=
         terminology_entry.display)
     print("from function: " + __name__ , "name = ", name)
     #step by step - take in more lines bit by bit
-    # for filename in os.listdir("%s" % data_set):
-    #     if name in filename and "snapshot" in filename:
-    #         with open(data_set + "/" + filename, encoding="UTF-8") as profile_file:
-    #             profile_data = json.load(profile_file)
-    #             if profile_data["kind"] == "logical":
-    #                 continue
-    #             # We differentiate between corner and none corner cases only for readability.
-    #             if profile_data["name"] in corner_cases:
-    #                 corner_cases.get(profile_data["name"])(profile_data, terminology_entry, element)
-    #             elif profile_data["type"] in profile_translation_mapping:
-    #                 profile_translation_mapping.get(profile_data["type"])(profile_data, terminology_entry, element)
-    #             else:
-    #                 raise UnknownHandlingException(profile_data["type"])
-    # if element:
-    #     terminology_entry.display = get_german_display(element) if get_german_display(element) else element["short"]
+    for filename in os.listdir("%s" % data_set):
+        if name in filename and "snapshot" in filename:
+            with open(data_set + "/" + filename, encoding="UTF-8") as profile_file:
+                profile_data = json.load(profile_file)
+                print("profile_data[kind]: ", profile_data["kind"])
+                print("profile_data[type]", profile_data["type"])
+                if profile_data["kind"] == "logical":
+                    continue
+                # We differentiate between corner and none corner cases only for readability.
+                if profile_data["name"] in corner_cases:
+                    corner_cases.get(profile_data["name"])(profile_data, terminology_entry, element)
+                elif profile_data["type"] in profile_translation_mapping:
+                    profile_translation_mapping.get(profile_data["type"])(profile_data, terminology_entry, element)
+                else:
+                    raise UnknownHandlingException(profile_data["type"])
+    if element:
+        terminology_entry.display = get_german_display(element) if get_german_display(element) else element["short"]
 
 
 def get_german_display(element):
@@ -368,6 +370,15 @@ def translate_sofa(profile_data, terminology_entry, logical_element):
     terminology_entry.fhirMapperType = "Sofa"
     terminology_entry.uiProfile = generate_quantity_observation_ui_profile(profile_data, logical_element)
 
+## MAKE MY NEW TRANSLATION SIMILAR TO SPECIMEN
+def translate_primary_diagnosis_onco(profile_data, terminology_entry, _logical_element):
+     print("from function: " + __name__ , " YEEEY you made it into the translation corner case!!")
+     terminology_entry.fhirMapperType ="Primaerdiagnose"  # ????? oder Condition? prüfen - aber ich mach ja dann eigenen mapper später denk ich
+     terminology_entry.uiProfile = generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element)
+     terminology_entry.display = "Primärdiagnose"
+     terminology_entry.children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data) # stimmt das so? ich will ja die icd10 codes
+     terminology_entry.leaf = False
+     inherit_parent_attributes(terminology_entry)
 
 def translate_specimen(profile_data, terminology_entry, _logical_element):
     terminology_entry.fhirMapperType = "Specimen"
@@ -519,7 +530,7 @@ profile_translation_mapping = {
     "Procedure": translate_procedure,
     "ResearchSubject": translate_research_subject,
     "Specimen": translate_specimen,
-    "Substance": translate_substance,
+    "Substance": translate_substance
 }
 
 corner_cases = {
@@ -535,8 +546,10 @@ corner_cases = {
     "PH": translate_gas_panel,
     "ProfileObservationLaboruntersuchung": translate_laboratory_values,
     "SOFA": translate_sofa,
-    "SymptomsCovid19": translate_symptom
+    "SymptomsCovid19": translate_symptom,
+    "Primaerdiagnose": translate_primary_diagnosis_onco
 }
+
 
 
 def translate_chronic_lung_diseases_with_duplicates(profile_data, terminology_entry, _logical_element):
