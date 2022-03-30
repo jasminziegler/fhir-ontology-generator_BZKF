@@ -1,5 +1,5 @@
 import os
-
+import json #for my test with ontoserver
 import requests
 
 from TerminologService.valueSetToRoots import create_vs_tree
@@ -31,19 +31,33 @@ def get_termentries_from_onto_server(canonical_address_value_set):
 
 def get_termcodes_from_onto_server(canonical_address_value_set, onto_server=ONTOLOGY_SERVER_ADDRESS):
     canonical_address_value_set = canonical_address_value_set.replace("|", "&version=")
-    print(canonical_address_value_set)
+    print("from function: " + __name__ , canonical_address_value_set)
+    print("from function: " + __name__ , onto_server)
     icd10_result = []
     snomed_result = []
     result = []
-    response = requests.get(
-        f"{onto_server}ValueSet/$expand?url={canonical_address_value_set}&includeDesignations=true")
+    request_string = f"{onto_server}/ValueSet/$expand?url={canonical_address_value_set}&includeDesignations=true"
+    print('request_string: ', request_string)
+    # response = requests.get(
+    #     f"{onto_server}ValueSet/$expand?url={canonical_address_value_set}&includeDesignations=true", verify=False)  # add verify=False here if you are whitelisted and to not have a SSL certificate
+    response = requests.get(request_string, verify=False)  # disable ssl
+    print("response from expand request: ", response)
     if response.status_code == 200:
         value_set_data = response.json()
+
+        ### my test to see onto server response(JZ)
+        with open("test_response_from_ontoserver.json", "w+") as f:
+            json.dump(value_set_data, f)
+        ###
+
         if "contains" in value_set_data["expansion"]:
             for contains in value_set_data["expansion"]["contains"]:
                 system = contains["system"]
+                print('system:', system)
                 code = contains["code"]
+                print('code:', code)
                 display = contains["display"]
+                print('display:', display)
                 term_code = TermCode(system, code, display)
                 if system == "http://fhir.de/CodeSystem/dimdi/icd-10-gm":
                     icd10_result.append(term_code)
@@ -97,6 +111,7 @@ def get_term_entries_by_id(element_id, profile_data):
                 return [TerminologyEntry([term_code], "CodeableConcept", leaf=True, selectable=True)]
         if "id" in element and element["id"] == element_id and "binding" in element:
             value_set = element["binding"]["valueSet"]
+            print("VALUESET: ", value_set)
             return get_termentries_from_onto_server(value_set)
     return []
 

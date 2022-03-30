@@ -146,15 +146,19 @@ def generate_quantity_observation_ui_profile(profile_data, logical_element):
 ## MAKE MY NEW UI PROFILE GENERATION SIMILAR TO SPECIMEN
 def generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element):
     ui_profile = UIProfile(profile_data["name"])  # = Primaerdiagnose - DEFAULT: TIME RESTRICTION ALLOWED
+    
+    # - erstmal raus weil ich nicht weiß wie bzw wo das ICD-O-3-T Zeug auf dem Ontoserver liegt - bei Lorenz ist es unter Specimen drin - wie mach ich das dann?
+    #  AHH ich glaube hier fehlt mir dann das VALUESET!!! das CodeSystem ist ist ja eh vorhanden - ICD-O-3 - 
     # 1. Topographie
-    topography_attribute_code = TermCode("mii.abide", "bodySite", "ICD-O-3-T Topographie")  # weiß bei dem System hier nie was rein soll
-    topography_attribute = AttributeDefinition(attribute_code=topography_attribute_code, value_type="concept")
-    topography_attribute.selectableConcepts = get_term_codes_by_id("Condition.bodySite.coding.ICD-O-3-T", profile_data)
-    ui_profile.attributeDefinitions.append(topography_attribute)
+    # topography_attribute_code = TermCode("mii.abide", "bodySite", "ICD-O-3-T Topographie")  # weiß bei dem System hier nie was rein soll
+    # topography_attribute = AttributeDefinition(attribute_code=topography_attribute_code, value_type="concept")
+    # topography_attribute.selectableConcepts = get_term_codes_by_id("Condition.bodySite.coding.ICD-O-3-T", profile_data)
+    # ui_profile.attributeDefinitions.append(topography_attribute)
+
     # 2. Seitenlokalisation ADT 
     body_site_adt_attribute_code = TermCode("mii.abide", "bodySite", "ADT-Seitenlokalisation")
     body_site_adt_attribute = AttributeDefinition(attribute_code=body_site_adt_attribute_code, value_type="concept")
-    vs_body_site_adt = "https://simplifier.net/oncology/seitenlokalisationvs"
+    vs_body_site_adt = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/SeitenlokalisationVS"
     body_site_adt_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_body_site_adt)   #geht das so? und das vs legen wir dann auf server ab? kann ich das lokal testen und hier iwo ablegen zunächst? hier wär es: fhir-ontology-generator_BZKF\resources\core_data_sets\de.dktk.oncology#1.1.1\package\ValueSet-onco-core-ValueSet-SeitenlokalisationVS.json
     ui_profile.attributeDefinitions.append(body_site_adt_attribute)
     UI_PROFILES.add(ui_profile)

@@ -186,11 +186,11 @@ if __name__ == '__main__':
 
    
     # SCHRITT 1
-    generate_snapshots() #auskommentiert, weil es sehr lange dauert
+    #generate_snapshots() #auskommentiert, weil es sehr lange dauert
     # -------------------------------------------------------------
     
     # SCHRITT 2
-    #core_data_category_entries = generate_core_data_set()
+    core_data_category_entries = generate_core_data_set()
 
     # category_entries = create_terminology_definition_for(get_gecco_categories())
     # # TODO: ones the specimen and consent profiles are declared use them instead!

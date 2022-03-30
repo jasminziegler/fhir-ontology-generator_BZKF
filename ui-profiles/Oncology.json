@@ -1,0 +1,73 @@
+{
+    "children": [
+        {
+            "attributeDefinitions": [
+                {
+                    "attributeCode": {
+                        "code": "bodySite",
+                        "display": "ADT-Seitenlokalisation",
+                        "system": "mii.abide"
+                    },
+                    "optional": true,
+                    "precision": 1,
+                    "selectableConcepts": [
+                        {
+                            "code": "M",
+                            "display": "Mittellinie/Mittig",
+                            "system": "http://dktk.dkfz.de/fhir/onco/core/CodeSystem/SeitenlokalisationCS"
+                        },
+                        {
+                            "code": "B",
+                            "display": "beidseitig (sollte bei bestimmten Tumoren 2 Meldungen ergeben)",
+                            "system": "http://dktk.dkfz.de/fhir/onco/core/CodeSystem/SeitenlokalisationCS"
+                        },
+                        {
+                            "code": "L",
+                            "display": "links",
+                            "system": "http://dktk.dkfz.de/fhir/onco/core/CodeSystem/SeitenlokalisationCS"
+                        },
+                        {
+                            "code": "R",
+                            "display": "rechts",
+                            "system": "http://dktk.dkfz.de/fhir/onco/core/CodeSystem/SeitenlokalisationCS"
+                        },
+                        {
+                            "code": "T",
+                            "display": "trifft nicht zu (Seitenangabe nicht sinnvoll, einschlie\u00dflich Systemerkrankungen)",
+                            "system": "http://dktk.dkfz.de/fhir/onco/core/CodeSystem/SeitenlokalisationCS"
+                        },
+                        {
+                            "code": "U",
+                            "display": "unbekannt",
+                            "system": "http://dktk.dkfz.de/fhir/onco/core/CodeSystem/SeitenlokalisationCS"
+                        }
+                    ],
+                    "type": "concept"
+                }
+            ],
+            "display": "Prim\u00e4rdiagnose",
+            "id": "23b8c1e9-3924-56de-3eb1-3b9046685257",
+            "leaf": false,
+            "selectable": false,
+            "termCodes": [
+                {
+                    "code": "Primaerdiagnose",
+                    "display": "Primaerdiagnose",
+                    "system": "mii.abide"
+                }
+            ],
+            "timeRestrictionAllowed": true
+        }
+    ],
+    "display": "Oncology",
+    "id": "bdd640fb-0667-1ad1-1c80-317fa3b1799d",
+    "leaf": false,
+    "selectable": false,
+    "termCodes": [
+        {
+            "code": "Oncology",
+            "display": "Oncology",
+            "system": "mii.abide"
+        }
+    ]
+}

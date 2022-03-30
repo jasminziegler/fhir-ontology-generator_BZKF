@@ -13,7 +13,7 @@ ONTOSERVER = os.environ.get('ONTOLOGY_SERVER_ADDRESS')
 
 def expand_value_set(url):
     term_codes = SortedSet()
-    response = requests.get(ONTOSERVER + f"ValueSet/$expand?url={url}")
+    response = requests.get(ONTOSERVER + f"ValueSet/$expand?url={url}", verify=False)  # add verify=False here if you are whitelisted and to not have a SSL certificate
     if response.status_code == 200:
         value_set_data = response.json()
         global_version = None
@@ -68,12 +68,13 @@ def create_concept_map():
         }]
     }
     headers = {"Content-type": "application/fhir+json"}
-    requests.post(ONTOSERVER + "$closure", json=body, headers=headers)
+    requests.post(ONTOSERVER + "$closure", json=body, headers=headers, verify=False)  # add verify=False here if you are whitelisted and do not have a SSL certificate
 
 
 def get_closure_map(term_codes):
     body = {"resourceType": "Parameters",
             "parameter": [{"name": "name", "valueString": "closure-test"}]}
+    print("BODY: ", body)
     for term_code in term_codes:
         body["parameter"].append({"name": "concept",
                                   "valueCoding": {
@@ -83,7 +84,7 @@ def get_closure_map(term_codes):
                                       "version": f"{term_code.version}"
                                   }})
     headers = {"Content-type": "application/fhir+json"}
-    response = requests.post(ONTOSERVER + "$closure", json=body, headers=headers)
+    response = requests.post(ONTOSERVER + "$closure", json=body, headers=headers, verify=False) # add verify=False if you are whitelistes and do not have a SSL certificate
     if response.status_code == 200:
         closure_response = response.json()
     else:

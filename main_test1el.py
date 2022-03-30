@@ -1,16 +1,62 @@
 # snapshots usw hab ich hier jetzt schon mal erstellt, es geht los ab generate_core_data_set()
 from tokenize import Name
 from model.UiDataModel import TerminologyEntry, TermCode
+import errno
 import os
+from os import path
 import json
+from jsonschema import validate
+
+from model.MappingDataModel import generate_map
 from geccoToUIProfiles import create_terminology_definition_for, get_gecco_categories, IGNORE_CATEGORIES, \
     MAIN_CATEGORIES, IGNORE_LIST, \
     get_specimen, get_consent, resolve_terminology_entry_profile, get_ui_profiles
+from model.termCodeTree import to_term_code_node
 
 # Name aus der package.json aus jedem Profil - bzw im Ordnernamen ohne #
 DKTK = "de.dktk.oncology 1.1.1"
 core_data_sets = [DKTK] # only process dktk folder in resources/core_data_sets
 
+
+# FIXME:
+def mkdir_if_not_exists(directory):
+    if not path.isdir(f"./{directory}"):
+        try:
+            os.system(f"mkdir {directory}")
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+
+def generate_result_folder():
+    mkdir_if_not_exists("mapping")
+    mkdir_if_not_exists("csv")
+    mkdir_if_not_exists("ui-profiles")
+
+
+def validate_ui_profile(profile_name):
+    f = open("ui-profiles/" + profile_name + ".json", 'r')
+    validate(instance=json.load(f), schema=json.load(open("resources/schema/ui-profile-schema.json")))
+
+
+# HIER MUSS ICH NOCHMAL RAN - wie wird das term-code-mapping-schema.json erstellt?
+def generate_term_code_mapping(entries):
+    map_entries = generate_map(entries)
+    map_entries_file = open("mapping/" + "codex-term-code-mapping.json", 'w')
+    map_entries_file.write(map_entries.to_json())
+    map_entries_file.close()
+    map_entries_file = open("mapping/" + "codex-term-code-mapping.json", 'r')
+    validate(instance=json.load(map_entries_file), schema=json.load(open(
+        "resources/schema/term-code-mapping-schema.json")))
+
+
+def generate_term_code_tree(entries):
+    term_code_tree = to_term_code_node(entries)
+    term_code_file = open("mapping/" + "codex-code-tree.json", 'w')
+    term_code_file.write(term_code_tree.to_json())
+    term_code_file.close()
+    term_code_file = open("mapping/" + "codex-code-tree.json", 'r')
+    validate(instance=json.load(term_code_file), schema=json.load(open("resources/schema/codex-code-tree-schema.json")))
 
 def generate_core_data_set():
     core_data_set_modules = []
@@ -51,9 +97,38 @@ def generate_core_data_set():
                                                         leaf=False)
                 resolve_terminology_entry_profile(module_element_entry,
                 data_set=f"resources/core_data_sets/{data_set}/package")
+                if module_category_entry.display == module_element_entry.display:
+                        # Resolves issue like : -- Prozedure                 --Prozedure
+                        #                           -- Prozedure     --->      -- BILDGEBENDE DIAGNOSTIK
+                        #                              -- BILDGEBENDE DIAGNOSTIK
+                        module_category_entry.children += module_element_entry.children
+                else:
+                    module_category_entry.children.append(module_element_entry)
+        f = open("ui-profiles/" + module_category_entry.display + ".json", 'w', encoding="utf-8")
+        f.write(module_category_entry.to_json())
+        f.close()
+        validate_ui_profile(module_category_entry.display)
+        core_data_set_modules.append(module_category_entry)
+    return core_data_set_modules
 
+#einzeln laufen lassen
 
-generate_core_data_set()
+# Schritt 0
+#generate_result_folder()
+
+# Schritt 1
+# hier fehlt dann noch später 
+# download_core_data_set_mii + download_dktk stuff
+# generate_snapshots()
+
+# Schritt 2
+core_data_category_entries = generate_core_data_set()
+
+# SCHRITT 3, 4, 5
+for profile in get_ui_profiles():
+   print(profile.to_json())
+generate_term_code_mapping(core_data_category_entries)
+generate_term_code_tree(core_data_category_entries)
 
 def do_nothing(_profile_data, _terminology_entry, _element):
     pass

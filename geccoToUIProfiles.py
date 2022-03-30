@@ -128,6 +128,7 @@ def resolve_terminology_entry_profile(terminology_entry, element=None, data_set=
                 profile_data = json.load(profile_file)
                 print("profile_data[kind]: ", profile_data["kind"])
                 print("profile_data[type]", profile_data["type"])
+                print("profile_data[name]", profile_data["name"])
                 if profile_data["kind"] == "logical":
                     continue
                 # We differentiate between corner and none corner cases only for readability.
