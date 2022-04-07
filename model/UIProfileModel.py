@@ -152,7 +152,7 @@ def generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element):
     # 1. Topographie
     # topography_attribute_code = TermCode("mii.abide", "bodySite", "ICD-O-3-T Topographie")  # weiß bei dem System hier nie was rein soll
     # topography_attribute = AttributeDefinition(attribute_code=topography_attribute_code, value_type="concept")
-    # topography_attribute.selectableConcepts = get_term_codes_by_id("Condition.bodySite.coding.ICD-O-3-T", profile_data)
+    # topography_attribute.selectableConcepts = get_term_codes_by_id("Condition.bodySite.coding.ICD-O-3-T", profile_data) # icd-o-3 bei Specimen -- dieses VS bei Primaerdiagnose https://simplifier.net/oncology/morphologieicdo3vs, siehe https://simplifier.net/oncology/primaerdiagnose
     # ui_profile.attributeDefinitions.append(topography_attribute)
 
     # 2. Seitenlokalisation ADT 

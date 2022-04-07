@@ -39,7 +39,30 @@ def validate_ui_profile(profile_name):
     validate(instance=json.load(f), schema=json.load(open("resources/schema/ui-profile-schema.json")))
 
 
-# HIER MUSS ICH NOCHMAL RAN - wie wird das term-code-mapping-schema.json erstellt?
+def is_structured_definition(file):
+    with open(file, encoding="UTF-8") as json_file:
+        json_data = json.load(json_file)
+        if json_data.get("resourceType") == "StructureDefinition":
+            return True
+        return False
+
+
+def generate_snapshots():
+    data_set_folders = [f.path for f in os.scandir("resources/core_data_sets") if f.is_dir()]
+    saved_path = os.getcwd()
+    for folder in data_set_folders:
+        os.chdir(f"{folder}/package")
+        #os.chdir(f"{folder}\\package")
+        os.system(f"fhir install hl7.fhir.r4.core")
+        for file in [f for f in os.listdir('.') if
+                     os.path.isfile(f) and is_structured_definition(f) and "-snapshot" not in f]:
+            os.system(f"fhir push {file}")
+            os.system(f"fhir snapshot")
+            os.system(f"fhir save {file[:-5]}-snapshot.json")
+        os.chdir(saved_path)
+
+
+# HIER MUSS ICH NOCHMAL RAN - wie wird das term-code-mapping-schema.json erstellt? -- alles HÄNDISCH!
 def generate_term_code_mapping(entries):
     map_entries = generate_map(entries)
     map_entries_file = open("mapping/" + "codex-term-code-mapping.json", 'w')
@@ -57,6 +80,7 @@ def generate_term_code_tree(entries):
     term_code_file.close()
     term_code_file = open("mapping/" + "codex-code-tree.json", 'r')
     validate(instance=json.load(term_code_file), schema=json.load(open("resources/schema/codex-code-tree-schema.json")))
+
 
 def generate_core_data_set():
     core_data_set_modules = []
@@ -119,7 +143,7 @@ def generate_core_data_set():
 # Schritt 1
 # hier fehlt dann noch später 
 # download_core_data_set_mii + download_dktk stuff
-# generate_snapshots()
+#generate_snapshots()
 
 # Schritt 2
 core_data_category_entries = generate_core_data_set()
@@ -127,6 +151,8 @@ core_data_category_entries = generate_core_data_set()
 # SCHRITT 3, 4, 5
 for profile in get_ui_profiles():
    print(profile.to_json())
+
+print("input to generate_term_code_mapping(core_data_category_entries): ", core_data_category_entries)
 generate_term_code_mapping(core_data_category_entries)
 generate_term_code_tree(core_data_category_entries)
 

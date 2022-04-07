@@ -261,6 +261,37 @@ class SofaMapEntry(MapEntry):
         self.timeRestrictionParameter = "date"
 
 
+class PrimaerdiagnoseMapEntry(MapEntry):
+   print("class PrimaerdiagnoseMapEntry called, add stuff here")
+   def __init__(self, term_code):
+       super().__init__(term_code)
+       self.termCodeSearchParameter = "code"
+       self.fhirResourceType = "Condition"
+       self.valueSearchParameter = None     # was ist valueSearchParameter?? und was sind die fixedCriteria bei Condition?
+       body_site_adt_attribute_term_code = TermCode("mii.abide", "Condition.bodySite", "ADT-Seitenlokalisation")
+       body_site_adt_attribute_search_parameter = AttributeSearchParameter("code", body_site_adt_attribute_term_code, "body-site", "Condition.bodySite")
+
+       self.attributeSearchParameters = [body_site_adt_attribute_search_parameter]
+       self.timeRestrictionParameter = "onset"
+        # self.key = term_code
+        ## self.termCodeSearchParameter = None 
+        # self.valueSearchParameter = None
+        # self.timeRestrictionParameter = None
+        ## self.fhirResourceType = None
+        # self.fixedCriteria = []
+        # self.valueFhirPath = None
+        # self.attributeSearchParameters = []
+#class ConditionMapEntry(MapEntry):
+    # def __init__(self, term_code):
+    #     super().__init__(term_code)
+    #     self.termCodeSearchParameter = "code"
+    #     self.valueSearchParameter = None
+    #     self.fhirResourceType = "Condition"
+    #     confirmed = TermCode("http://terminology.hl7.org/CodeSystem/condition-ver-status", "confirmed", "confirmed")
+    #     self.fixedCriteria = [FixedCriteria("coding", "verification-status", "verificationStatus", [confirmed])]
+    #     self.timeRestrictionParameter = "recorded-date"
+
+
 class SpecimenMapEntry(MapEntry):
     def __init__(self, term_code):
         super().__init__(term_code)
@@ -305,9 +336,12 @@ def generate_child_entries(children, class_name):
 def generate_map(categories):
     result = MapEntryList()
     for category in categories:
+        print("category: ", category)
         for terminology in category.children:
+            print("terminology: ", terminology)
             if terminology.fhirMapperType:
                 class_name = terminology.fhirMapperType + "MapEntry"
+                print("class_name: ", class_name)
                 for termCode in terminology.termCodes:
                     result.entries.add(str_to_class(class_name)(termCode))
                     result.entries = result.entries.union(generate_child_entries(terminology.children, class_name))
@@ -317,4 +351,5 @@ def generate_map(categories):
 
 
 def str_to_class(class_name):
+    print("sys.modules[__name__] = ", sys.modules[__name__])
     return getattr(sys.modules[__name__], class_name)

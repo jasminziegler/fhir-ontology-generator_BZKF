@@ -1,0 +1,25 @@
+{
+    "children": [
+        {
+            "children": [
+                {
+                    "termCode": {
+                        "code": "Primaerdiagnose",
+                        "display": "Primaerdiagnose",
+                        "system": "mii.abide"
+                    }
+                }
+            ],
+            "termCode": {
+                "code": "Oncology",
+                "display": "Oncology",
+                "system": "mii.abide"
+            }
+        }
+    ],
+    "termCode": {
+        "code": "",
+        "display": "",
+        "system": ""
+    }
+}

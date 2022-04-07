@@ -1,0 +1,24 @@
+[
+    {
+        "attributeSearchParameters": [
+            {
+                "attributeFhirPath": "Condition.bodySite",
+                "attributeKey": {
+                    "code": "Condition.bodySite",
+                    "display": "ADT-Seitenlokalisation",
+                    "system": "mii.abide"
+                },
+                "attributeSearchParameter": "body-site",
+                "attributeType": "code"
+            }
+        ],
+        "fhirResourceType": "Condition",
+        "key": {
+            "code": "Primaerdiagnose",
+            "display": "Primaerdiagnose",
+            "system": "mii.abide"
+        },
+        "termCodeSearchParameter": "code",
+        "timeRestrictionParameter": "onset"
+    }
+]

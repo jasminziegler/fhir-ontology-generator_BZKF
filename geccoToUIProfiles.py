@@ -371,15 +371,27 @@ def translate_sofa(profile_data, terminology_entry, logical_element):
     terminology_entry.fhirMapperType = "Sofa"
     terminology_entry.uiProfile = generate_quantity_observation_ui_profile(profile_data, logical_element)
 
+# def translate_condition(profile_data, terminology_entry, _logical_element):
+#     element_id = "Condition.code.coding:icd10-gm"
+#     terminology_entry.fhirMapperType = "Condition"
+#     terminology_entry.uiProfile = generate_default_ui_profile(profile_data["name"], _logical_element)
+#     children = get_term_entries_by_id(element_id, profile_data)
+#     if children:
+#         terminology_entry.leaf = False
+#         terminology_entry.children += children
+#         inherit_parent_attributes(terminology_entry)
 ## MAKE MY NEW TRANSLATION SIMILAR TO SPECIMEN
 def translate_primary_diagnosis_onco(profile_data, terminology_entry, _logical_element):
      print("from function: " + __name__ , " YEEEY you made it into the translation corner case!!")
      terminology_entry.fhirMapperType ="Primaerdiagnose"  # ????? oder Condition? prüfen - aber ich mach ja dann eigenen mapper später denk ich
      terminology_entry.uiProfile = generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element)
-     terminology_entry.display = "Primärdiagnose"
-     terminology_entry.children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data) # stimmt das so? ich will ja die icd10 codes
-     terminology_entry.leaf = False
-     inherit_parent_attributes(terminology_entry)
+     terminology_entry.display = "Primaerdiagnose"
+     children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data) # stimmt das so? ich will ja die icd10 codes
+     if children:
+         terminology_entry.leaf = False
+         terminology_entry.children += children
+         inherit_parent_attributes(terminology_entry)
+
 
 def translate_specimen(profile_data, terminology_entry, _logical_element):
     terminology_entry.fhirMapperType = "Specimen"
