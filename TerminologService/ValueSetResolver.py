@@ -4,8 +4,11 @@ import requests
 
 from TerminologService.valueSetToRoots import create_vs_tree
 from model.UiDataModel import TermCode, TerminologyEntry
+#from dotenv import load_dotenv
 
 ONTOLOGY_SERVER_ADDRESS = os.environ.get('ONTOLOGY_SERVER_ADDRESS')
+#load_dotenv()
+#ONTOLOGY_SERVER_ADDRESS = os.getenv('ONTOLOGY_SERVER_ADDRESS')
 POSSIBLE_CODE_SYSTEMS = ["http://loinc.org", "http://snomed.info/sct"]
 
 
@@ -16,12 +19,13 @@ def get_termentries_from_onto_server(canonical_address_value_set):
                                        "procedures-sct"]:
         return []
     canonical_address_value_set = canonical_address_value_set.replace("|", "&version=")
-    print(canonical_address_value_set)
+    print("I am in get_termentries_from_onto_server: canonical_address_value_set ", canonical_address_value_set)
     # In Gecco 1.04 all icd10 elements with children got removed this brings them back. Requires matching valuesets on
     # Ontoserver
     if canonical_address_value_set.endswith("icd"):
         canonical_address_value_set = canonical_address_value_set + "-with-parent"
     result = create_vs_tree(canonical_address_value_set)
+    #print(result)
     if len(result) < 1:
         print("ERROR", canonical_address_value_set)
     return result
@@ -41,7 +45,7 @@ def get_termcodes_from_onto_server(canonical_address_value_set, onto_server=ONTO
     # response = requests.get(
     #     f"{onto_server}ValueSet/$expand?url={canonical_address_value_set}&includeDesignations=true", verify=False)  # add verify=False here if you are whitelisted and to not have a SSL certificate
     response = requests.get(request_string, verify=False)  # disable ssl
-    print("response from expand request: ", response)
+    #print("response from expand request: ", response)
     if response.status_code == 200:
         value_set_data = response.json()
 
@@ -53,11 +57,11 @@ def get_termcodes_from_onto_server(canonical_address_value_set, onto_server=ONTO
         if "contains" in value_set_data["expansion"]:
             for contains in value_set_data["expansion"]["contains"]:
                 system = contains["system"]
-                print('system:', system)
+                #print('system:', system)
                 code = contains["code"]
-                print('code:', code)
+                #print('code:', code)
                 display = contains["display"]
-                print('display:', display)
+                #print('display:', display)
                 term_code = TermCode(system, code, display)
                 if system == "http://fhir.de/CodeSystem/dimdi/icd-10-gm":
                     icd10_result.append(term_code)
@@ -111,7 +115,7 @@ def get_term_entries_by_id(element_id, profile_data):
                 return [TerminologyEntry([term_code], "CodeableConcept", leaf=True, selectable=True)]
         if "id" in element and element["id"] == element_id and "binding" in element:
             value_set = element["binding"]["valueSet"]
-            print("VALUESET: ", value_set)
+            print("found the binding! VALUESET: ", value_set)
             return get_termentries_from_onto_server(value_set)
     return []
 
@@ -196,17 +200,25 @@ def get_term_codes_by_path(element_path, profile_data):
         return [result]
     for element in profile_data["snapshot"]["element"]:
         if "path" in element and element["path"] == element_path:
+            #print("if path in element and element[path] == element_path")
             if "patternCoding" in element:
+                #print("if patternCoding")
                 if "code" in element["patternCoding"]:
+                    #print("if code in patternCoding") # haben wir gar nicht -- also gleich zu binding
                     term_code = pattern_coding_to_termcode(element)
+                    #print(term_code)
                     return [term_code]
             elif "patternCodeableConcept" in element:
+                #print("if patternCodeableConcept")
                 for coding in element["patternCodeableConcept"]["coding"]:
                     if "code" in coding:
                         term_code = pattern_codeable_concept_to_termcode(coding)
                     return [term_code]
+        # hier gehen wir rein mit histologie
         if "path" in element and element["path"] == element_path and "binding" in element:
+            print("INSIDE BINDING -- if path in element and element[path] == element_path and binding in element:")
             value_set = element["binding"]["valueSet"]
+            print("VALUESET VALUESET VALUESET RESOLVER:", value_set)
     if value_set:
         result = get_termcodes_from_onto_server(value_set)
         return result

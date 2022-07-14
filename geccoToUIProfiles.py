@@ -135,6 +135,7 @@ def resolve_terminology_entry_profile(terminology_entry, element=None, data_set=
                 if profile_data["name"] in corner_cases:
                     corner_cases.get(profile_data["name"])(profile_data, terminology_entry, element)
                 elif profile_data["type"] in profile_translation_mapping:
+                    print("go into observation translation if type = ", profile_data["type"])
                     profile_translation_mapping.get(profile_data["type"])(profile_data, terminology_entry, element)
                 else:
                     raise UnknownHandlingException(profile_data["type"])
@@ -171,10 +172,14 @@ def parse_term_code(terminology_entry, element, path):
 
 
 def update_termcode_to_match_pattern_coding(terminology_entry, element):
+    #print("UPDATE TERMCODE TO MATCH PATTERN CODING")
     if terminology_entry.termCode.system == "mii.abide":
         if element["path"] == "Observation.code.coding" and "patternCoding" in element:
+            #print("found patternCoding")
             terminology_entry.termCode.code = element["patternCoding"]["code"]
+            #print("terminology_entry.termCode.code = ", terminology_entry.termCode.code)
             terminology_entry.termCode.system = element["patternCoding"]["system"]
+            #print("terminology_entry.termCode.system = ", terminology_entry.termCode.system)
 
 
 def translate_age(profile_data, terminology_entry, logical_element):
@@ -317,6 +322,7 @@ def is_concept_observation(profile_data):
             if element["max"] == "0":
                 return False
         if "type" in element:
+            print("ICH GLAUB DIESER CASE SPRINGT BEI MEINER HISTOLOGIE AN")
             if element["path"] == "Observation.value[x]" and element["type"][0]["code"] == "CodeableConcept":
                 return True
         if "sliceName" in element:
@@ -324,6 +330,21 @@ def is_concept_observation(profile_data):
                     (element["path"] == "Observation.value[x].coding"):
                 return True
     return is_concept_value
+
+#cornercase: es ist eine concept observation mit patternCoding in Observation.value[x].coding.code und nicht in Observation.value[x].coding wie bei der standard observation
+#eigenes histologie ui_profile
+def translate_histologie_onco(profile_data, terminology_entry, logical_element):
+    #terminology_entry.leaf = True
+    #terminology_entry.selectable = True
+    for element in profile_data["snapshot"]["element"]:
+        update_termcode_to_match_pattern_coding(terminology_entry, element) # brauch ich das?
+    terminology_entry.fhirMapperType = "Histologie"
+    terminology_entry.uiProfile = generate_histologie_onco_ui_profile(profile_data, logical_element)
+    children = get_term_entries_by_id("Observation.value[x].coding.code", profile_data) # stimmt das so? ich will ja die icd10 codes
+    if children:
+        terminology_entry.leaf = False
+        terminology_entry.children += children
+        inherit_parent_attributes(terminology_entry)
 
 
 def translate_patient(profile_data, terminology_entry, _logical_element):
@@ -382,15 +403,20 @@ def translate_sofa(profile_data, terminology_entry, logical_element):
 #         inherit_parent_attributes(terminology_entry)
 ## MAKE MY NEW TRANSLATION SIMILAR TO SPECIMEN
 def translate_primary_diagnosis_onco(profile_data, terminology_entry, _logical_element):
-     print("from function: " + __name__ , " YEEEY you made it into the translation corner case!!")
-     terminology_entry.fhirMapperType ="Primaerdiagnose"  # ????? oder Condition? prüfen - aber ich mach ja dann eigenen mapper später denk ich
-     terminology_entry.uiProfile = generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element)
-     terminology_entry.display = "Primaerdiagnose"
-     children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data) # stimmt das so? ich will ja die icd10 codes
-     if children:
-         terminology_entry.leaf = False
-         terminology_entry.children += children
-         inherit_parent_attributes(terminology_entry)
+    print("from function: " + __name__ , " YEEEY you made it into the translation corner case!!")
+    terminology_entry.fhirMapperType ="Primaerdiagnose"  # ????? oder Condition? prüfen - aber ich mach ja dann eigenen mapper später denk ich
+    terminology_entry.uiProfile = generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element)
+    terminology_entry.display = "Primaerdiagnose"
+     # new test
+    # terminology_entry.children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data)
+    # terminology_entry.leaf = False
+    # inherit_parent_attributes(terminology_entry)
+    children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data) # stimmt das so? ich will ja die icd10 codes
+    if children:
+        terminology_entry.leaf = False
+        terminology_entry.children += children
+        inherit_parent_attributes(terminology_entry)
+    
 
 
 def translate_specimen(profile_data, terminology_entry, _logical_element):
@@ -560,7 +586,8 @@ corner_cases = {
     "ProfileObservationLaboruntersuchung": translate_laboratory_values,
     "SOFA": translate_sofa,
     "SymptomsCovid19": translate_symptom,
-    "Primaerdiagnose": translate_primary_diagnosis_onco
+    "Primaerdiagnose": translate_primary_diagnosis_onco,
+    "Histologie": translate_histologie_onco
 }
 
 

@@ -2,6 +2,7 @@ import bisect
 import requests
 import locale
 import os
+import json
 
 from sortedcontainers import SortedSet
 
@@ -13,7 +14,9 @@ ONTOSERVER = os.environ.get('ONTOLOGY_SERVER_ADDRESS')
 
 def expand_value_set(url):
     term_codes = SortedSet()
-    response = requests.get(ONTOSERVER + f"ValueSet/$expand?url={url}", verify=False)  # add verify=False here if you are whitelisted and to not have a SSL certificate
+    print("ONTOSERVER: ", ONTOSERVER)
+    response = requests.get(ONTOSERVER + f"/ValueSet/$expand?url={url}", verify=False)  # add verify=False here if you are whitelisted and to not have a SSL certificate
+    
     if response.status_code == 200:
         value_set_data = response.json()
         global_version = None
@@ -31,16 +34,24 @@ def expand_value_set(url):
                 version = contains["version"]
             else:
                 version = global_version
-            term_code = TermCode(system, code, display, version)
-            term_codes.add(term_code)
+            # ONLY TAKE ONCOLOGICAL CODES HERE - this is hacky and not nice 
+            #onco_icd_codes = ["C", "C61"]
+            if "C" in code or "D0" in code or "D1" in code or "D2" in code or "D3" in code or "D4" in code: # - test for some
+                #print("code", code)
+                term_code = TermCode(system, code, display, version)
+                term_codes.add(term_code)
+    print(len(term_codes))
     return term_codes
 
 
-def create_vs_tree(canonical_url):
+def create_vs_tree(canonical_url):    
     create_concept_map()
     vs = expand_value_set(canonical_url)
+    #print(vs)
     vs_dict = {term_code.code: TerminologyEntry([term_code], leaf=True, selectable=True) for term_code in vs}
+    #print(vs_dict)
     closure_map_data = get_closure_map(vs)
+    #print("here is the closure_map_data: ", closure_map_data)
     if "group" in closure_map_data:
         for group in closure_map_data["group"]:
             subsumption_map = group["element"]
@@ -56,8 +67,9 @@ def create_vs_tree(canonical_url):
                     bisect.insort(vs_dict[parent].children, vs_dict[node])
                     vs_dict[node].root = False
                     vs_dict[parent].leaf = False
+    #das ist die lange liste 
+    #print("print what is returned here: ", sorted([term_code for term_code in vs_dict.values() if term_code.root]))
     return sorted([term_code for term_code in vs_dict.values() if term_code.root])
-
 
 def create_concept_map():
     body = {
@@ -68,14 +80,14 @@ def create_concept_map():
         }]
     }
     headers = {"Content-type": "application/fhir+json"}
-    requests.post(ONTOSERVER + "$closure", json=body, headers=headers, verify=False)  # add verify=False here if you are whitelisted and do not have a SSL certificate
+    requests.post(ONTOSERVER + "/$closure", json=body, headers=headers, verify=False)  # add verify=False here if you are whitelisted and do not have a SSL certificate
 
 
 def get_closure_map(term_codes):
     body = {"resourceType": "Parameters",
             "parameter": [{"name": "name", "valueString": "closure-test"}]}
-    print("BODY: ", body)
     for term_code in term_codes:
+        #print("TERMCODE: ", term_code)
         body["parameter"].append({"name": "concept",
                                   "valueCoding": {
                                       "system": f"{term_code.system}",
@@ -83,10 +95,13 @@ def get_closure_map(term_codes):
                                       "display": f"{term_code.display}",
                                       "version": f"{term_code.version}"
                                   }})
+        #print("BODY: ", body) #- this takes ages if many term codes
     headers = {"Content-type": "application/fhir+json"}
-    response = requests.post(ONTOSERVER + "$closure", json=body, headers=headers, verify=False) # add verify=False if you are whitelistes and do not have a SSL certificate
+    response = requests.post(ONTOSERVER + "/$closure", json=body, headers=headers, verify=False) # add verify=False if you are whitelistes and do not have a SSL certificate
     if response.status_code == 200:
         closure_response = response.json()
+        with open("ui-profiles/closure-response-test.json", "w") as outfile:
+            json.dump(closure_response, outfile)
     else:
         raise Exception(response.content)
     return closure_response
@@ -117,3 +132,10 @@ def value_set_json_to_term_code_set(response):
                 term_code = TermCode(system, code, display, version)
                 term_codes.add(term_code)
     return term_codes
+
+# if __name__ == "__main__":    
+#     create_concept_map()
+#     term_code_c91_5 = TermCode("http://fhir.de/CodeSystem/bfarm/icd-10-gm", "C91.5", "Adulte(s) T-Zell-Lymphom/Leukämie (HTLV-1-assoziiert)", "2022")
+#     term_code_c91_51 = TermCode("http://fhir.de/CodeSystem/bfarm/icd-10-gm", "C91.51", "Adulte(s) T-Zell-Lymphom/Leukämie (HTLV-1-assoziiert) : In kompletter Remission", "2022")
+#     print(get_closure_map([term_code_c91_5, term_code_c91_51]))
+    

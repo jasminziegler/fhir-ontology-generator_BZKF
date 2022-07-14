@@ -58,9 +58,23 @@ def generate_concept_observation_ui_profile(profile_data, _logical_element):
     ui_profile = UIProfile(profile_data["name"])
     value_definition = ValueDefinition("concept")
     if selectable_concepts := get_term_codes_by_path("Observation.value[x]", profile_data):
+        #print("IF IF IF") #hier geh ich niemals rein - passt auch so
         value_definition.selectableConcepts = selectable_concepts
     else:
+        print("ELSE ELSE ELSE")
+        print(get_term_codes_by_path("Observation.value[x].coding", profile_data))
         value_definition.selectableConcepts = get_term_codes_by_path("Observation.value[x].coding", profile_data)
+        print("selectable concepts = ", value_definition.selectableConcepts)
+    ui_profile.valueDefinition = value_definition
+    UI_PROFILES.add(ui_profile)
+    return ui_profile
+
+def generate_histologie_onco_ui_profile(profile_data, _logical_element):
+    print("Congrats! you made it into the histologie onco ui profile generation")
+    ui_profile = UIProfile(profile_data["name"])
+    value_definition = ValueDefinition("concept")
+    value_definition.selectableConcepts = get_term_codes_by_path("Observation.value[x].coding.code", profile_data)
+    #print("selectable concepts = ", value_definition.selectableConcepts)
     ui_profile.valueDefinition = value_definition
     UI_PROFILES.add(ui_profile)
     return ui_profile

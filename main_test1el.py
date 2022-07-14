@@ -62,7 +62,8 @@ def generate_snapshots():
         os.chdir(saved_path)
 
 
-# HIER MUSS ICH NOCHMAL RAN - wie wird das term-code-mapping-schema.json erstellt? -- alles HÄNDISCH!
+# HIER MUSS ICH NOCHMAL RAN - wie wird das term-code-mapping-schema.json erstellt? -- alle schema files für validierung HÄNDISCH!
+# damit nicht jeder irgendein wildes format anlegen kann 
 def generate_term_code_mapping(entries):
     map_entries = generate_map(entries)
     map_entries_file = open("mapping/" + "codex-term-code-mapping.json", 'w')
@@ -149,8 +150,8 @@ def generate_core_data_set():
 core_data_category_entries = generate_core_data_set()
 
 # SCHRITT 3, 4, 5
-for profile in get_ui_profiles():
-   print(profile.to_json())
+#for profile in get_ui_profiles():
+#   print(profile.to_json())
 
 print("input to generate_term_code_mapping(core_data_category_entries): ", core_data_category_entries)
 generate_term_code_mapping(core_data_category_entries)

@@ -106,6 +106,23 @@ class ConceptObservationMapEntry(MapEntry):
         self.fixedCriteria = []
         self.timeRestrictionParameter = "date"
 
+class HistologieMapEntry(MapEntry):
+   print("class HistologieMapEntry called, add stuff here")
+   def __init__(self, term_code):
+       super().__init__(term_code)
+       self.termCodeSearchParameter = "combo-value-concept"
+       self.fhirResourceType = "Observation"
+       self.valueSearchParameter = None     # was ist valueSearchParameter?? und was sind die fixedCriteria bei Condition?
+       self.timeRestrictionParameter = "effective"
+    # das ist aus PrimaerdiagnoseMapEntry   
+    #    self.termCodeSearchParameter = "code"
+    #    self.fhirResourceType = "Condition"
+    #    self.valueSearchParameter = None     # was ist valueSearchParameter?? und was sind die fixedCriteria bei Condition?
+    #    body_site_adt_attribute_term_code = TermCode("mii.abide", "bodySite", "ADT-Seitenlokalisation")
+    #    body_site_adt_attribute_search_parameter = AttributeSearchParameter("coding", body_site_adt_attribute_term_code, "body-site", "Condition.bodySite")
+
+    #    self.attributeSearchParameters = [body_site_adt_attribute_search_parameter]
+    #    self.timeRestrictionParameter = "onset"
 
 class ConditionMapEntry(MapEntry):
     def __init__(self, term_code):
@@ -268,8 +285,8 @@ class PrimaerdiagnoseMapEntry(MapEntry):
        self.termCodeSearchParameter = "code"
        self.fhirResourceType = "Condition"
        self.valueSearchParameter = None     # was ist valueSearchParameter?? und was sind die fixedCriteria bei Condition?
-       body_site_adt_attribute_term_code = TermCode("mii.abide", "Condition.bodySite", "ADT-Seitenlokalisation")
-       body_site_adt_attribute_search_parameter = AttributeSearchParameter("code", body_site_adt_attribute_term_code, "body-site", "Condition.bodySite")
+       body_site_adt_attribute_term_code = TermCode("mii.abide", "bodySite", "ADT-Seitenlokalisation")
+       body_site_adt_attribute_search_parameter = AttributeSearchParameter("coding", body_site_adt_attribute_term_code, "body-site", "Condition.bodySite")
 
        self.attributeSearchParameters = [body_site_adt_attribute_search_parameter]
        self.timeRestrictionParameter = "onset"
@@ -351,5 +368,5 @@ def generate_map(categories):
 
 
 def str_to_class(class_name):
-    print("sys.modules[__name__] = ", sys.modules[__name__])
+    #print("sys.modules[__name__] = ", sys.modules[__name__])
     return getattr(sys.modules[__name__], class_name)
