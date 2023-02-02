@@ -105,12 +105,13 @@ class ConceptObservationMapEntry(MapEntry):
         self.fhirResourceType = "Observation"
         self.fixedCriteria = []
         self.timeRestrictionParameter = "date"
+        
 
 class HistologieMapEntry(MapEntry):
    print("class HistologieMapEntry called, add stuff here")
    def __init__(self, term_code):
        super().__init__(term_code)
-       self.termCodeSearchParameter = "combo-value-concept"
+       self.termCodeSearchParameter = "code-value-concept"
        self.fhirResourceType = "Observation"
        self.valueSearchParameter = None     # was ist valueSearchParameter?? und was sind die fixedCriteria bei Condition?
        self.timeRestrictionParameter = "effective"
@@ -123,6 +124,15 @@ class HistologieMapEntry(MapEntry):
 
     #    self.attributeSearchParameters = [body_site_adt_attribute_search_parameter]
     #    self.timeRestrictionParameter = "onset"
+
+class TNMMapEntry(MapEntry):
+    print("class HistologieMapEntry called, add stuff here")
+    def __init__(self, term_code):
+        super().__init__(term_code)
+        self.termCodeSearchParameter = "component-code-value-concept" # weil ich damit in component code+valueconcept druchsuchen kann
+        self.fhirResourceType = "Observation"
+        self.valueSearchParameter = None
+        self.timeRestrictionParameter = "effective"
 
 class ConditionMapEntry(MapEntry):
     def __init__(self, term_code):
@@ -247,6 +257,30 @@ class ProcedureMapEntry(MapEntry):
         self.timeRestrictionParameter = "date"
 
 
+class OncoOperationMapEntry(MapEntry):
+    def __init__(self, term_code):
+        super().__init__(term_code)
+        self.termCodeSearchParameter = "code"
+        self.valueSearchParameter = None
+        self.fhirResourceType = "Procedure"
+        #completed = TermCode("http://hl7.org/fhir/event-status", "completed", "completed")
+        #in_progress = TermCode("http://hl7.org/fhir/event-status", "in-progress", "in-progress")
+        #self.fixedCriteria = [FixedCriteria("code", "status", "status", [completed, in_progress])]
+        self.timeRestrictionParameter = "performed"
+
+
+class OncoClinicalImpressionMapEntry(MapEntry):
+    def __init__(self, term_code):
+        super().__init__(term_code)
+        self.termCodeSearchParameter = "code"
+        self.valueSearchParameter = None
+        self.fhirResourceType = "ClinicalImpression"
+        #completed = TermCode("http://hl7.org/fhir/event-status", "completed", "completed")
+        #in_progress = TermCode("http://hl7.org/fhir/event-status", "in-progress", "in-progress")
+        #self.fixedCriteria = [FixedCriteria("code", "status", "status", [completed, in_progress])]
+        self.timeRestrictionParameter = "effective"
+
+
 class QuantityObservationMapEntry(MapEntry):
     def __init__(self, term_code):
         super().__init__(term_code)
@@ -285,6 +319,7 @@ class PrimaerdiagnoseMapEntry(MapEntry):
        self.termCodeSearchParameter = "code"
        self.fhirResourceType = "Condition"
        self.valueSearchParameter = None     # was ist valueSearchParameter?? und was sind die fixedCriteria bei Condition?
+       
        body_site_adt_attribute_term_code = TermCode("mii.abide", "bodySite", "ADT-Seitenlokalisation")
        body_site_adt_attribute_search_parameter = AttributeSearchParameter("coding", body_site_adt_attribute_term_code, "body-site", "Condition.bodySite")
 

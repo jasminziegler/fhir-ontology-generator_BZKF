@@ -1,12 +1,14 @@
 import os
 import json #for my test with ontoserver
 import requests
+from requests_pkcs12 import get, post
 
 from TerminologService.valueSetToRoots import create_vs_tree
 from model.UiDataModel import TermCode, TerminologyEntry
 #from dotenv import load_dotenv
 
 ONTOLOGY_SERVER_ADDRESS = os.environ.get('ONTOLOGY_SERVER_ADDRESS')
+PKCS12_PW = os.environ.get('PKCS12_PW')
 #load_dotenv()
 #ONTOLOGY_SERVER_ADDRESS = os.getenv('ONTOLOGY_SERVER_ADDRESS')
 POSSIBLE_CODE_SYSTEMS = ["http://loinc.org", "http://snomed.info/sct"]
@@ -24,6 +26,7 @@ def get_termentries_from_onto_server(canonical_address_value_set):
     # Ontoserver
     if canonical_address_value_set.endswith("icd"):
         canonical_address_value_set = canonical_address_value_set + "-with-parent"
+    # HIER PASSIERT DER FEHLER mit meinen HISTOLOGIE CHILDREN
     result = create_vs_tree(canonical_address_value_set)
     #print(result)
     if len(result) < 1:
@@ -38,20 +41,24 @@ def get_termcodes_from_onto_server(canonical_address_value_set, onto_server=ONTO
     print("from function: " + __name__ , canonical_address_value_set)
     print("from function: " + __name__ , onto_server)
     icd10_result = []
+    icdo3_result = [] # HINZUGEFÜGT FÜR MORPHOLOGIE
     snomed_result = []
     result = []
     request_string = f"{onto_server}/ValueSet/$expand?url={canonical_address_value_set}&includeDesignations=true"
     print('request_string: ', request_string)
     # response = requests.get(
     #     f"{onto_server}ValueSet/$expand?url={canonical_address_value_set}&includeDesignations=true", verify=False)  # add verify=False here if you are whitelisted and to not have a SSL certificate
-    response = requests.get(request_string, verify=False)  # disable ssl
-    #print("response from expand request: ", response)
+    #response = requests.get(request_string, verify=False)  # disable ssl
+    #response = requests.get(request_string, verify=True)   # enable ssl
+    # use pkc12 package
+    response = get(request_string, pkcs12_filename='P:\Zertifikate\DFN\Jasmin_Ziegler_2022-09-22.p12', pkcs12_password=PKCS12_PW)
+    print("response from expand request: ", response)
     if response.status_code == 200:
         value_set_data = response.json()
 
         ### my test to see onto server response(JZ)
-        with open("test_response_from_ontoserver.json", "w+") as f:
-            json.dump(value_set_data, f)
+        #with open("test_response_from_ontoserver.json", "w+") as f:
+        #    json.dump(value_set_data, f)
         ###
 
         if "contains" in value_set_data["expansion"]:
@@ -65,6 +72,8 @@ def get_termcodes_from_onto_server(canonical_address_value_set, onto_server=ONTO
                 term_code = TermCode(system, code, display)
                 if system == "http://fhir.de/CodeSystem/dimdi/icd-10-gm":
                     icd10_result.append(term_code)
+                elif system == "http://terminology.hl7.org/CodeSystem/icd-o-3":
+                    icdo3_result.append(term_code)
                 elif system == "http://snomed.info/sct":
                     if "designation" in contains:
                         for designation in contains["designation"]:
@@ -76,13 +85,15 @@ def get_termcodes_from_onto_server(canonical_address_value_set, onto_server=ONTO
         else:
             return []
     else:
-        print(f"{canonical_address_value_set} is empty")
+        print(f"{canonical_address_value_set} is EEEEEEEMPTYYYYY--------------------------------------->")
         return []
     # TODO: Workaround
     if result and result[0].display == "Hispanic or Latino":
         return sorted(result + snomed_result)
     if icd10_result:
         return icd10_result
+    elif icdo3_result:
+        return icdo3_result
     elif result:
         return sorted(result)
     else:
@@ -108,12 +119,15 @@ def pattern_codeable_concept_to_termcode(element):
 
 # Ideally we would want to use [path] not the id, but using the id gives us control on which valueSet we want to use.
 def get_term_entries_by_id(element_id, profile_data):
+    print("Hello")
     for element in profile_data["snapshot"]["element"]:
         if "id" in element and element["id"] == element_id and "patternCoding" in element:
             if "code" in element["patternCoding"]:
+                print("patterncoding")
                 term_code = pattern_coding_to_termcode(element)
                 return [TerminologyEntry([term_code], "CodeableConcept", leaf=True, selectable=True)]
         if "id" in element and element["id"] == element_id and "binding" in element:
+            print("in binding if")
             value_set = element["binding"]["valueSet"]
             print("found the binding! VALUESET: ", value_set)
             return get_termentries_from_onto_server(value_set)
@@ -130,6 +144,10 @@ def get_term_entries_by_path(element_path, profile_data):
             value_set = element["binding"]["valueSet"]
             return get_termentries_from_onto_server(value_set)
     return []
+
+# def get_term_entries_for_tnm_components(id, profile_data):
+#     for element in profile_data["snapshot"]["element"]:
+#         if "Observation.component.value[x]" in element["id"]
 
 
 def get_value_sets_by_path(element_path, profile_data):

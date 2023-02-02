@@ -117,6 +117,7 @@ def generate_result_folder():
 
 def remove_resource_name(name_with_resource_name):
     # order matters here!
+    print("name_with_resource_name: ", name_with_resource_name)
     resource_names = ["ProfilePatient", "Profile", "LogicalModel", "Condition", "DiagnosticReport", "Observation",
                       "ServiceRequest", "Extension", "ResearchSubject", "Procedure"]
     for resource_name in resource_names:
@@ -202,8 +203,8 @@ if __name__ == '__main__':
     #for profile in get_ui_profiles():
     #    print(profile.to_json())
     #category_entries += core_data_category_entries
-    #generate_term_code_mapping(core_data_category_entries)
-    #generate_term_code_tree(core_data_category_entries)
+    generate_term_code_mapping(core_data_category_entries)
+    generate_term_code_tree(core_data_category_entries)
 
     # remove this category_entries variable to only work with core data without gecco
     # category_entries += core_data_category_entries

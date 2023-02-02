@@ -7,6 +7,7 @@ from os import path
 import json
 from jsonschema import validate
 
+from FHIRProfileConfiguration import *
 from model.MappingDataModel import generate_map
 from geccoToUIProfiles import create_terminology_definition_for, get_gecco_categories, IGNORE_CATEGORIES, \
     MAIN_CATEGORIES, IGNORE_LIST, \
@@ -14,8 +15,9 @@ from geccoToUIProfiles import create_terminology_definition_for, get_gecco_categ
 from model.termCodeTree import to_term_code_node
 
 # Name aus der package.json aus jedem Profil - bzw im Ordnernamen ohne #
-DKTK = "de.dktk.oncology 1.1.1"
-core_data_sets = [DKTK] # only process dktk folder in resources/core_data_sets
+# jetzt mit from FHIRProfileConfiguration import *
+#DKTK = "de.dktk.oncology 1.1.1"
+#core_data_sets = [DKTK] # only process dktk folder in resources/core_data_sets
 
 
 # FIXME:
@@ -82,6 +84,14 @@ def generate_term_code_tree(entries):
     term_code_file = open("mapping/" + "codex-code-tree.json", 'r')
     validate(instance=json.load(term_code_file), schema=json.load(open("resources/schema/codex-code-tree-schema.json")))
 
+def remove_resource_name(name_with_resource_name):
+    # order matters here!
+    resource_names = ["ProfilePatient", "Profile", "LogicalModel", "Condition", "DiagnosticReport", "Observation",
+                        "ServiceRequest", "Extension", "ResearchSubject", "Procedure"]
+    for resource_name in resource_names:
+        name_with_resource_name = name_with_resource_name.replace(resource_name, "")
+    return name_with_resource_name
+
 
 def generate_core_data_set():
     core_data_set_modules = []
@@ -89,6 +99,8 @@ def generate_core_data_set():
     for data_set in core_data_sets:
         print("data_set: ", data_set)
         module_name = data_set.split(' ')[0].split(".")[-1].capitalize()
+        if module_name == "Oncology":
+            module_name = "Onkologie"
         print("module_name extracted from filename: ", module_name)
         module_code = TermCode("mii.abide", module_name, module_name)       # System?? was anderes? was wird daduch beeinfluss
         module_category_entry = TerminologyEntry([module_code], "Category", selectable=False,  leaf=False)
@@ -113,11 +125,11 @@ def generate_core_data_set():
                 name = json_data.get("name")
                 print("from function: " + __name__ , "name: ", name)
                 # das hier erstmal weglassen, kp was das soll
-                # module_element_name = remove_resource_name(json_data.get("name"))
-                # if module_element_name in IGNORE_LIST:
-                #     continue
-                module_element_code = TermCode("mii.abide", name, name)
-                #module_element_code = TermCode("mii.abide", module_element_name, module_element_name)
+                module_element_name = remove_resource_name(json_data.get("name"))
+                if module_element_name in IGNORE_LIST:
+                    continue
+                #module_element_code = TermCode("mii.abide", name, name)
+                module_element_code = TermCode("mii.abide", module_element_name, module_element_name)
                 module_element_entry = TerminologyEntry([module_element_code], "Category", selectable=False,
                                                         leaf=False)
                 resolve_terminology_entry_profile(module_element_entry,

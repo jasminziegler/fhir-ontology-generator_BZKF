@@ -300,7 +300,21 @@ def translate_medication_statement(profile_data, terminology_entry, _logical_ele
     terminology_entry.leaf = False
 
 
+def translate_tnm_onco(profile_data, terminology_entry, _logical_element):
+    # generate UI profile for TNMc/TNMp + UICC
+    print("I RETUUUUUUURNEEEEED AND NOW TRANSLATE TNMc / TNMp")
+    terminology_entry.fhirMapperType = "TNM"
+    terminology_entry.uiProfile = generate_tnm_onco_ui_profile(profile_data, _logical_element)
+    if profile_data["name"] == "TNMc":
+        terminology_entry.display = "TNMc"
+    else:
+        terminology_entry.display = "TNMp"
+    terminology_entry.leaf = True
+    terminology_entry.selectable = True
+
+
 def translate_observation(profile_data, terminology_entry, logical_element):
+    print("TRANSLATE OBSERVATION")
     terminology_entry.leaf = True
     terminology_entry.selectable = True
     for element in profile_data["snapshot"]["element"]:
@@ -323,7 +337,7 @@ def is_concept_observation(profile_data):
                 return False
         if "type" in element:
             print("ICH GLAUB DIESER CASE SPRINGT BEI MEINER HISTOLOGIE AN")
-            if element["path"] == "Observation.value[x]" and element["type"][0]["code"] == "CodeableConcept":
+            if element["path"] == "Observation.value[x]" and element["type"][0]["code"] == "CodeableConcept": # YES genau das kommt im Snapshot vor
                 return True
         if "sliceName" in element:
             if (element["path"] == "Observation.value[x]" and element["sliceName"] == "valueCodeableConcept") or \
@@ -336,15 +350,44 @@ def is_concept_observation(profile_data):
 def translate_histologie_onco(profile_data, terminology_entry, logical_element):
     #terminology_entry.leaf = True
     #terminology_entry.selectable = True
-    for element in profile_data["snapshot"]["element"]:
-        update_termcode_to_match_pattern_coding(terminology_entry, element) # brauch ich das?
+    #for element in profile_data["snapshot"]["element"]:
+    #    update_termcode_to_match_pattern_coding(terminology_entry, element) # brauch ich das?
     terminology_entry.fhirMapperType = "Histologie"
     terminology_entry.uiProfile = generate_histologie_onco_ui_profile(profile_data, logical_element)
+    terminology_entry.display = "Morphologie ICD-O-3"
     children = get_term_entries_by_id("Observation.value[x].coding.code", profile_data) # stimmt das so? ich will ja die icd10 codes
     if children:
+        print("!!!!!!!!!!WOHO WE GOT CHILDREN")
         terminology_entry.leaf = False
         terminology_entry.children += children
         inherit_parent_attributes(terminology_entry)
+
+# def translate_primary_diagnosis_onco(profile_data, terminology_entry, _logical_element):
+#     print("from function: " + __name__ , " YEEEY you made it into the translation corner case!!")
+#     terminology_entry.fhirMapperType ="Primaerdiagnose"  # ????? oder Condition? prüfen - aber ich mach ja dann eigenen mapper später denk ich
+#     terminology_entry.uiProfile = generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element)
+#     terminology_entry.display = "Primaerdiagnose"
+#     children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data) # stimmt das so? ich will ja die icd10 codes
+#     if children:
+#         terminology_entry.leaf = False
+#         terminology_entry.children += children
+#         inherit_parent_attributes(terminology_entry)
+
+# das wird aktuell nicht genutzt, da ich keinen corner case für Grading habe uns somit die normale observation ui profile nehme
+# def translate_grading_onco(profile_data, terminology_entry, logical_element):
+#     #terminology_entry.leaf = True
+#     #terminology_entry.selectable = True
+#     #for element in profile_data["snapshot"]["element"]:
+#     #    update_termcode_to_match_pattern_coding(terminology_entry, element) # brauch ich das?
+#     terminology_entry.fhirMapperType = "Grading"
+#     terminology_entry.uiProfile = generate_grading_onco_ui_profile(profile_data, logical_element)
+#     terminology_entry.display = "Morphologie ICD-O-3"
+#     children = get_term_entries_by_id("Observation.value[x].coding.code", profile_data)
+#     if children:
+#         print("!!!!!!!!!!WOHO WE GOT CHILDREN")
+#         terminology_entry.leaf = False
+#         terminology_entry.children += children
+#         inherit_parent_attributes(terminology_entry)
 
 
 def translate_patient(profile_data, terminology_entry, _logical_element):
@@ -371,6 +414,29 @@ def translate_procedure(profile_data, terminology_entry, _logical_element):
     inherit_parent_attributes(terminology_entry)
     terminology_entry.leaf = False
 
+# Wieso geht hier die Standard Procedure oben drüber nicht? nochmal testen
+def translate_onco_operation(profile_data, terminology_entry, _logical_element):
+    terminology_entry.fhirMapperType = "OncoOperation"
+    terminology_entry.uiProfile = generate_onco_operation_ui_profile(profile_data["name"], _logical_element)
+    ops_children = get_term_entries_by_id("Procedure.code.coding:ops", profile_data)
+    terminology_entry.children = ops_children
+    print("found ops children: ", len(ops_children))
+    inherit_parent_attributes(terminology_entry)
+    terminology_entry.leaf = False
+
+
+""" def translate_onco_proced_strahlenth(profile_data, terminology_entry, _logical_element):
+    terminology_entry.fhirMapperType = "OncoStrahlenth"
+    terminology_entry.uiProfile = generate_onco_strahlenth_ui_profile(profile_date["name", _logical_element]
+    ) """
+
+""" def translate_clinical_impression(profile_data, terminology_entry, _logical_element):
+    terminology_entry.fhirMapperType = "OncoClinicalImpression"
+    terminology_entry.uiProfile = generate_onco_clinical_impression_ui_profile(profile_data["name"], _logical_element)
+    terminology_entry.leaf = True
+    terminology_entry.selectable = True
+    terminology_entry.display = "Verlauf (Follow-Up)" """
+
 
 def translate_research_subject(_profile_data, _terminology_entry):
     pass
@@ -392,25 +458,12 @@ def translate_sofa(profile_data, terminology_entry, logical_element):
     terminology_entry.fhirMapperType = "Sofa"
     terminology_entry.uiProfile = generate_quantity_observation_ui_profile(profile_data, logical_element)
 
-# def translate_condition(profile_data, terminology_entry, _logical_element):
-#     element_id = "Condition.code.coding:icd10-gm"
-#     terminology_entry.fhirMapperType = "Condition"
-#     terminology_entry.uiProfile = generate_default_ui_profile(profile_data["name"], _logical_element)
-#     children = get_term_entries_by_id(element_id, profile_data)
-#     if children:
-#         terminology_entry.leaf = False
-#         terminology_entry.children += children
-#         inherit_parent_attributes(terminology_entry)
-## MAKE MY NEW TRANSLATION SIMILAR TO SPECIMEN
+
 def translate_primary_diagnosis_onco(profile_data, terminology_entry, _logical_element):
     print("from function: " + __name__ , " YEEEY you made it into the translation corner case!!")
     terminology_entry.fhirMapperType ="Primaerdiagnose"  # ????? oder Condition? prüfen - aber ich mach ja dann eigenen mapper später denk ich
     terminology_entry.uiProfile = generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element)
     terminology_entry.display = "Primaerdiagnose"
-     # new test
-    # terminology_entry.children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data)
-    # terminology_entry.leaf = False
-    # inherit_parent_attributes(terminology_entry)
     children = get_term_entries_by_id("Condition.code.coding:icd10-gm", profile_data) # stimmt das so? ich will ja die icd10 codes
     if children:
         terminology_entry.leaf = False
@@ -428,7 +481,7 @@ def translate_specimen(profile_data, terminology_entry, _logical_element):
     inherit_parent_attributes(terminology_entry)
 
 
-def translate_substance(_profile_data, _terminology_entry):
+def translate_substance(_profile_data, _terminology_entry, _logical_element):
     pass
 
 
@@ -557,7 +610,6 @@ profile_translation_mapping = {
     "Extension": do_nothing,
     "Organization": do_nothing,
     "OrganizationAffiliation": do_nothing,
-
     "Condition": translate_condition,
     "Consent": translate_consent,
     "DiagnosticReport": translate_diagnostic_report,
@@ -569,7 +621,8 @@ profile_translation_mapping = {
     "Procedure": translate_procedure,
     "ResearchSubject": translate_research_subject,
     "Specimen": translate_specimen,
-    "Substance": translate_substance
+    "Substance": translate_substance, 
+   # "ClinicalImpression": translate_clinical_impression
 }
 
 corner_cases = {
@@ -587,7 +640,11 @@ corner_cases = {
     "SOFA": translate_sofa,
     "SymptomsCovid19": translate_symptom,
     "Primaerdiagnose": translate_primary_diagnosis_onco,
-    "Histologie": translate_histologie_onco
+    "Histologie": translate_histologie_onco, #--> TEST WITH NORMAL OBSERVATION
+    #oder mal mit normaler observation testen "Grading": translate_histologie_onco # testen ob das grading auch damit geht
+    "TNMc": translate_tnm_onco,
+    "TNMp": translate_tnm_onco,
+    "Operation": translate_onco_operation
 }
 
 

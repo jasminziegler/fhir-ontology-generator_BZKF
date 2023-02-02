@@ -3,19 +3,23 @@ import requests
 import locale
 import os
 import json
+from requests_pkcs12 import get, post
 
 from sortedcontainers import SortedSet
 
 from model.UiDataModel import TermCode, TerminologyEntry
 
 ONTOSERVER = os.environ.get('ONTOLOGY_SERVER_ADDRESS')
+PKCS12_PW = os.environ.get('PKCS12_PW')
 #locale.setlocale(locale.LC_ALL, 'de_DE')
 
 
 def expand_value_set(url):
     term_codes = SortedSet()
     print("ONTOSERVER: ", ONTOSERVER)
-    response = requests.get(ONTOSERVER + f"/ValueSet/$expand?url={url}", verify=False)  # add verify=False here if you are whitelisted and to not have a SSL certificate
+    print("REQUEST STRING: ", ONTOSERVER + f"/ValueSet/$expand?url={url}")
+    response = get(ONTOSERVER + f"/ValueSet/$expand?url={url}", pkcs12_filename='P:\Zertifikate\DFN\Jasmin_Ziegler_2022-09-22.p12', pkcs12_password=PKCS12_PW)
+    #response = requests.get(ONTOSERVER + f"/ValueSet/$expand?url={url}", verify=True)  # add verify=False here if you are whitelisted and to not have a SSL certificate
     
     if response.status_code == 200:
         value_set_data = response.json()
@@ -35,11 +39,22 @@ def expand_value_set(url):
             else:
                 version = global_version
             # ONLY TAKE ONCOLOGICAL CODES HERE - this is hacky and not nice 
-            #onco_icd_codes = ["C", "C61"]
-            if "C" in code or "D0" in code or "D1" in code or "D2" in code or "D3" in code or "D4" in code: # - test for some
-                #print("code", code)
+            # wieder ausgemacht, damit in Diagnose auch andere Diagnosen vorkommen
+            # jetzt kamen alle Diagnosen auch in Primärdiagnose vor... da will ich natürlich nur die onkologischen
+            if 'bfarm/icd-10-gm' in url:
+                if "C" in code or "D0" in code or "D1" in code or "D2" in code or "D3" in code or "D4" in code:
+                #if "C1" in code: #only test for C1 because it takes ages # - test for some
+                    term_code = TermCode(system, code, display, version)
+                    term_codes.add(term_code)
+            else:
                 term_code = TermCode(system, code, display, version)
                 term_codes.add(term_code)
+            # term_code = TermCode(system, code, display, version)
+            # term_codes.add(term_code)
+            #onco_icd_codes = ["C", "C61"]
+            #if "C" in code or "D0" in code or "D1" in code or "D2" in code or "D3" in code or "D4" in code: # - test for some
+                #print("code", code)
+            
     print(len(term_codes))
     return term_codes
 
@@ -68,7 +83,7 @@ def create_vs_tree(canonical_url):
                     vs_dict[node].root = False
                     vs_dict[parent].leaf = False
     #das ist die lange liste 
-    #print("print what is returned here: ", sorted([term_code for term_code in vs_dict.values() if term_code.root]))
+    print("print what is returned here: ", sorted([term_code for term_code in vs_dict.values() if term_code.root]))
     return sorted([term_code for term_code in vs_dict.values() if term_code.root])
 
 def create_concept_map():
@@ -80,8 +95,8 @@ def create_concept_map():
         }]
     }
     headers = {"Content-type": "application/fhir+json"}
-    requests.post(ONTOSERVER + "/$closure", json=body, headers=headers, verify=False)  # add verify=False here if you are whitelisted and do not have a SSL certificate
-
+    #requests.post(ONTOSERVER + "/$closure", json=body, headers=headers, verify=True)  # add verify=False here if you are whitelisted and do not have a SSL certificate
+    post(ONTOSERVER + "/$closure", json=body, headers=headers, pkcs12_filename='P:\Zertifikate\DFN\Jasmin_Ziegler_2022-09-22.p12', pkcs12_password=PKCS12_PW)
 
 def get_closure_map(term_codes):
     body = {"resourceType": "Parameters",
@@ -97,11 +112,17 @@ def get_closure_map(term_codes):
                                   }})
         #print("BODY: ", body) #- this takes ages if many term codes
     headers = {"Content-type": "application/fhir+json"}
-    response = requests.post(ONTOSERVER + "/$closure", json=body, headers=headers, verify=False) # add verify=False if you are whitelistes and do not have a SSL certificate
+    request_string = ONTOSERVER + "/$closure"
+    print("request_string: ", request_string) 
+    #pkcs12_filename='P:\Zertifikate\DFN\Jasmin_Ziegler_2022-09-22.p12', pkcs12_password='JasminZ1')
+    #response = requests.post(request_string, json=body, headers=headers, verify=True, cert=('P:\Zertifikate\DFN\myCert.crt', 'P:\Zertifikate\DFN\myKey.key')) #'P:\Zertifikate\DFN\cert-12172714172390989908652289883.pem') #'/p/Zertifikate/DFN/cert-12172714172390989908652289883.pem' # add verify=False if you are whitelistes and do not have a SSL certificate
+    #use requests_pkcs12 package
+    response = post(request_string, json=body, headers=headers, pkcs12_filename='P:\Zertifikate\DFN\Jasmin_Ziegler_2022-09-22.p12', pkcs12_password=PKCS12_PW)
     if response.status_code == 200:
+        print("success - closure response status code 200")
         closure_response = response.json()
-        with open("ui-profiles/closure-response-test.json", "w") as outfile:
-            json.dump(closure_response, outfile)
+        #with open("ui-profiles/closure-response-test.json", "w") as outfile:
+        #    json.dump(closure_response, outfile)
     else:
         raise Exception(response.content)
     return closure_response

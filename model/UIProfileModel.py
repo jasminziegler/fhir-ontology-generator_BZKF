@@ -58,7 +58,6 @@ def generate_concept_observation_ui_profile(profile_data, _logical_element):
     ui_profile = UIProfile(profile_data["name"])
     value_definition = ValueDefinition("concept")
     if selectable_concepts := get_term_codes_by_path("Observation.value[x]", profile_data):
-        #print("IF IF IF") #hier geh ich niemals rein - passt auch so
         value_definition.selectableConcepts = selectable_concepts
     else:
         print("ELSE ELSE ELSE")
@@ -69,13 +68,23 @@ def generate_concept_observation_ui_profile(profile_data, _logical_element):
     UI_PROFILES.add(ui_profile)
     return ui_profile
 
+# def generate_uicc_observation_ui_profile(profile_data, _logical_element):
+#     ui_profile = UIProfile("UICCStadium")
+#     value_definition = ValueDefinition("concept")
+#     selectable_concepts = get_term_codes_by_path("Observation.value[x]", profile_data)
+#     value_definition.selectableConcepts = selectable_concepts
+#     ui_profile.valueDefinition = value_definition
+#     UI_PROFILES.add(ui_profile)
+#     return ui_profile
+
+#ich glaub die wird gar nicht verwendet
 def generate_histologie_onco_ui_profile(profile_data, _logical_element):
-    print("Congrats! you made it into the histologie onco ui profile generation")
     ui_profile = UIProfile(profile_data["name"])
-    value_definition = ValueDefinition("concept")
-    value_definition.selectableConcepts = get_term_codes_by_path("Observation.value[x].coding.code", profile_data)
+    ### TEST 03.08. OHNE VALUEDEFINITION --> das geht nicht durch den validator - Idee 2: get term code from another profile - canonical_url hier angeben
+    #value_definition = ValueDefinition("concept")
+    #value_definition.selectableConcepts = get_termcodes_from_onto_server('http://dktk.dkfz.de/fhir/onco/core/ValueSet/GradingVS')
     #print("selectable concepts = ", value_definition.selectableConcepts)
-    ui_profile.valueDefinition = value_definition
+    #ui_profile.valueDefinition = value_definition
     UI_PROFILES.add(ui_profile)
     return ui_profile
 
@@ -177,6 +186,86 @@ def generate_primary_diagnosis_onco_ui_profile(profile_data, _logical_element):
     ui_profile.attributeDefinitions.append(body_site_adt_attribute)
     UI_PROFILES.add(ui_profile)
     return ui_profile
+
+
+def generate_tnm_onco_ui_profile(profile_data, _logical_element):
+    ui_profile = UIProfile(profile_data["name"])
+    # TNM - T
+    tnm_t_attribute_code = TermCode("mii.abide", "TNM-T", "TNM-T")
+    tnm_t_attribute = AttributeDefinition(attribute_code=tnm_t_attribute_code, value_type="concept")
+    vs_tnm_t = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/TNMTVS"
+    tnm_t_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_tnm_t)
+    ui_profile.attributeDefinitions.append(tnm_t_attribute)
+
+    # TNM - N
+    tnm_n_attribute_code = TermCode("mii.abide", "TNM-N", "TNM-N")
+    tnm_n_attribute = AttributeDefinition(attribute_code=tnm_n_attribute_code, value_type="concept")
+    vs_tnm_n = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/TNMNVS"
+    tnm_n_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_tnm_n)
+    ui_profile.attributeDefinitions.append(tnm_n_attribute)
+
+    # TNM - M
+    tnm_m_attribute_code = TermCode("mii.abide", "TNM-M", "TNM-M")
+    tnm_m_attribute = AttributeDefinition(attribute_code=tnm_m_attribute_code, value_type="concept")
+    vs_tnm_m = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/TNMMVS"
+    tnm_m_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_tnm_m)
+    ui_profile.attributeDefinitions.append(tnm_m_attribute)
+
+    # UICC
+    uicc_attribute_code = TermCode("mii.abide", "UICC", "UICC")
+    uicc_attribute = AttributeDefinition(attribute_code=uicc_attribute_code, value_type="concept")
+    vs_uicc = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/UiccstadiumVS"
+    uicc_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_uicc)
+    ui_profile.attributeDefinitions.append(uicc_attribute)
+
+    UI_PROFILES.add(ui_profile)
+    return ui_profile
+
+def generate_onco_clinical_impression_ui_profile(profile_data, _logical_element):
+    ui_profile = UIProfile("Verlauf (Follow-Up)")
+    # Lokaler Tumorstatus
+    local_tumorstatus_attribute_code = TermCode("mii.abide", "Lokaler Tumorstatus", "Lokaler Tumorstatus")
+    local_tumorstatus_attribute = AttributeDefinition(attribute_code=local_tumorstatus_attribute_code, value_type="concept")
+    vs_local_tumorstatus = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/VerlaufLokalerTumorstatusVS"
+    local_tumorstatus_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_local_tumorstatus)
+    ui_profile.attributeDefinitions.append(local_tumorstatus_attribute)
+    # Gesamtbeurteilung Tumorstatus
+    tumorstatus_attribute_code = TermCode("mii.abide", "Gesamtbeurteilung Tumorstatus", "Gesamtbeurteilung Tumorstatus")
+    tumorstatus_attribute = AttributeDefinition(attribute_code=tumorstatus_attribute_code, value_type="concept")
+    vs_tumorstatus = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/GesamtbeurteilungTumorstatusVS"
+    tumorstatus_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_tumorstatus)
+    ui_profile.attributeDefinitions.append(tumorstatus_attribute)
+    UI_PROFILES.add(ui_profile)
+    return ui_profile
+
+def generate_onco_operation_ui_profile(profile_data, _logical_element):
+    #print("profile_data[name] ", profile_data["name"])
+    ui_profile = UIProfile("Operation")
+    # OP-Intention - Pflichtfeld im ADT - GEHT FHIR SEARCH ÜBERHAUPT MIT EXTENSIONS
+    op_intention_attribute_code = TermCode("mii.abide", "OP-Intention", "OP-Intention")
+    op_intention_attribute = AttributeDefinition(attribute_code=op_intention_attribute_code, value_type="concept")
+    vs_op_intention = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/OPIntentionVS"
+    op_intention_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_op_intention)
+    ui_profile.attributeDefinitions.append(op_intention_attribute)
+    # OP Gesamtbeurteilung Residualstatus
+    op_rs_attribute_code = TermCode("mii.abide", "Gesamtbeurteilung Residualstatus", "Gesamtbeurteilung Residualstatus")
+    op_rs_attribute = AttributeDefinition(attribute_code=op_rs_attribute_code, value_type="concept")
+    vs_op_rs = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/GesamtbeurteilungResidualstatusVS"
+    op_rs_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_op_rs)
+    ui_profile.attributeDefinitions.append(op_rs_attribute)
+    # OP Lokale Beurteilung Residualstatus
+    op_rs_local_attribute_code = TermCode("mii.abide", "Lokale Beurteilung Residualstatus", "Lokale Beurteilung Residualstatus")
+    op_rs_local_attribute = AttributeDefinition(attribute_code=op_rs_local_attribute_code, value_type="concept")
+    vs_op_rs_local = "http://dktk.dkfz.de/fhir/onco/core/ValueSet/LokaleBeurteilungResidualstatusVS"
+    op_rs_local_attribute.selectableConcepts = get_termcodes_from_onto_server(vs_op_rs_local)
+    ui_profile.attributeDefinitions.append(op_rs_local_attribute)
+    UI_PROFILES.add(ui_profile)
+    return ui_profile
+
+""" def generate_onco_strahlenth_ui_profile(profile_data, _logical_element):
+    ui_profile = UIProfile("Strahlentherapie") """
+    
+
 
 def generate_specimen_ui_profile(profile_data, _logical_element):
     ui_profile = UIProfile(profile_data["name"])
